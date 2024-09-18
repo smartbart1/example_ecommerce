@@ -8,7 +8,7 @@ import '../model/category_model.dart';
 class CategoryPage extends StatelessWidget {
   final String category;
 
-  const CategoryPage({Key? key, required this.category}) : super(key: key);
+  const CategoryPage({super.key, required this.category});
 
   @override
   Widget build(BuildContext context) {

@@ -14,13 +14,13 @@ class ProductDetailBloc extends Cubit<Product?> {
       final cachedProduct = await _loadFromCache(id);
       if (cachedProduct != null) {
         emit(cachedProduct);
-      } else {
-        final response =
-            await Dio().get('https://fakestoreapi.com/products/$id');
-        final product = Product.fromJson(response.data);
-        emit(product);
-        await _saveToCache(id, product);
+        return;
       }
+
+      final response = await Dio().get('https://fakestoreapi.com/products/$id');
+      final product = Product.fromJson(response.data);
+      emit(product);
+      await _saveToCache(id, product);
     } catch (e) {
       emit(null);
     }
@@ -28,17 +28,16 @@ class ProductDetailBloc extends Cubit<Product?> {
 
   Future<void> _saveToCache(String id, Product product) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setString(_getCacheKey(id), jsonEncode(product.toJson()));
+    await prefs.setString(_getCacheKey(id), jsonEncode(product.toJson()));
   }
 
   Future<Product?> _loadFromCache(String id) async {
     final prefs = await SharedPreferences.getInstance();
     final cacheData = prefs.getString(_getCacheKey(id));
 
-    if (cacheData != null) {
-      final productJson = jsonDecode(cacheData);
-      return Product.fromJson(productJson);
-    }
-    return null;
+    if (cacheData == null) return null;
+
+    final productJson = jsonDecode(cacheData);
+    return Product.fromJson(productJson);
   }
 }

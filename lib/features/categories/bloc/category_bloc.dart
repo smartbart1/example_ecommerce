@@ -14,16 +14,17 @@ class CategoriesBloc extends Cubit<List<Category>> {
       final cachedCategories = await _loadFromCache();
       if (cachedCategories != null) {
         emit(cachedCategories);
-      } else {
-        final response =
-            await Dio().get('https://fakestoreapi.com/products/categories');
-        final categories = List<String>.from(response.data)
-            .map((e) => Category(name: e))
-            .toList();
-
-        emit(categories);
-        await _saveToCache(categories);
+        return;
       }
+
+      final response =
+          await Dio().get('https://fakestoreapi.com/products/categories');
+      final categories = List<String>.from(response.data)
+          .map((e) => Category(name: e))
+          .toList();
+
+      emit(categories);
+      await _saveToCache(categories);
     } catch (e) {
       emit([]);
     }
@@ -33,17 +34,16 @@ class CategoriesBloc extends Cubit<List<Category>> {
     final prefs = await SharedPreferences.getInstance();
     final categoriesList =
         categories.map((category) => category.toJson()).toList();
-    prefs.setString(_cacheKey, jsonEncode(categoriesList));
+    await prefs.setString(_cacheKey, jsonEncode(categoriesList));
   }
 
   Future<List<Category>?> _loadFromCache() async {
     final prefs = await SharedPreferences.getInstance();
     final cacheData = prefs.getString(_cacheKey);
 
-    if (cacheData != null) {
-      final List<dynamic> categoryListJson = jsonDecode(cacheData);
-      return categoryListJson.map((json) => Category.fromJson(json)).toList();
-    }
-    return null;
+    if (cacheData == null) return null;
+
+    final List<dynamic> categoryListJson = jsonDecode(cacheData);
+    return categoryListJson.map((json) => Category.fromJson(json)).toList();
   }
 }
